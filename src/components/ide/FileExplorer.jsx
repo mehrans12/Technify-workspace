@@ -245,7 +245,12 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
     try {
       const response = await fetch(`${API_BASE}/api/workspace/files?roomId=${roomId}`);
       if (!response.ok) throw new Error('Failed to load files');
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response (Error ${response.status})`);
+      }
       setFiles(data.files || []);
     } catch (err) {
       console.error('[FileExplorer] Error fetching files:', err);
@@ -285,7 +290,12 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
     try {
       const response = await fetch(`${API_BASE}/api/workspace/file?roomId=${roomId}&path=${encodeURIComponent(filePath)}`);
       if (!response.ok) throw new Error('Failed to read file');
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response (Error ${response.status})`);
+      }
 
       const ext = fileName.split('.').pop()?.toLowerCase() || '';
       const language = extensionToLanguage(ext);
@@ -317,8 +327,14 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to create file');
+        let errMsg = 'Failed to create file';
+        try {
+          const data = await response.json();
+          errMsg = data.error || errMsg;
+        } catch (e) {
+          errMsg = `Error ${response.status}: ${response.statusText || 'Unexpected response structure'}`;
+        }
+        throw new Error(errMsg);
       }
 
       setNewItemName('');
@@ -351,8 +367,14 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to create folder');
+        let errMsg = 'Failed to create folder';
+        try {
+          const data = await response.json();
+          errMsg = data.error || errMsg;
+        } catch (e) {
+          errMsg = `Error ${response.status}: ${response.statusText || 'Unexpected response structure'}`;
+        }
+        throw new Error(errMsg);
       }
 
       setNewItemName('');
