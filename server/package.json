@@ -1,6 +1,6 @@
 {
   "name": "technify-collab-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "WebSocket server for real-time collaborative coding",
   "main": "index.js",
   "type": "module",
