@@ -10,7 +10,7 @@
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\" \"npm run dev:live\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --port $PORT --host 0.0.0.0"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
