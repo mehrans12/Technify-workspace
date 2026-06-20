@@ -30,6 +30,8 @@ const Github = ({ size = 20, className = "" }) => (
   </svg>
 );
 
+const PREVIEW_BASE_URL = import.meta.env.VITE_PREVIEW_URL || 'http://localhost:3000';
+
 export default function Dashboard() {
   const [code] = useState('// Welcome to Technify Workspace\n\nfunction greet() {\n  console.log("Hello, World!");\n}\n\ngreet();');
   const [language, setLanguage] = useState('javascript');
@@ -474,14 +476,14 @@ export default function Dashboard() {
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
                     </div>
                     <div className="flex-grow-1 text-center bg-dark text-muted py-0.5 rounded px-2" style={{ border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'monospace', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      http://localhost:3000/?room={roomId}
+                      {PREVIEW_BASE_URL}/?room={roomId}
                     </div>
                   </div>
                   
                   {/* Preview iframe */}
                   <iframe
                     ref={iframeRef}
-                    src={`http://localhost:3000/?room=${roomId}`}
+                    src={`${PREVIEW_BASE_URL}/?room=${roomId}`}
                     title="Live App Preview"
                     className="w-100 flex-grow-1 border-0"
                     style={{ backgroundColor: '#ffffff' }}

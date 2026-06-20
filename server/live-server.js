@@ -20,7 +20,7 @@ if (!fs.existsSync(workspacesDir)) {
   fs.mkdirSync(workspacesDir, { recursive: true });
 }
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const app = express();
 
 // In-memory Virtual File System (VFS) cache: roomId -> { filePath -> fileContent }
@@ -230,7 +230,8 @@ function getLiveClientScript(roomId) {
 <!-- Cloud IDE Live Dev Runtime Reload Script -->
 <script>
   (function() {
-    const socketUrl = 'ws://' + window.location.host + '/?room=${roomId}';
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socketUrl = protocol + window.location.host + '/?room=${roomId}';
     let ws;
     let wasDisconnected = false;
     function connect() {
