@@ -78,6 +78,7 @@ export default function GitPanel({ editorRef, roomId }) {
   // Local file changes state
   const [hasChanges, setHasChanges] = useState(false);
   const [activeFileContent, setActiveFileContent] = useState('');
+  const anyWorkspaceChanges = (gitStatus?.changes && gitStatus.changes.length > 0) || hasChanges;
 
   // Activity logs
   const [gitActivities, setGitActivities] = useState([]);
@@ -1222,19 +1223,31 @@ export default function GitPanel({ editorRef, roomId }) {
           {!isViewer && (
             <div className="mb-4">
               <div className="text-muted small mb-2" style={{ fontSize: '10px' }}>CHANGES</div>
-              {!hasChanges ? (
+              {(!gitStatus?.changes || gitStatus.changes.length === 0) ? (
                 <div className="p-3 text-center rounded-3 theme-bg-secondary text-muted small" style={{ border: '1px dashed var(--border-subtle)' }}>
                   No file modifications detected.
                 </div>
               ) : (
-                <div className="d-flex align-items-center justify-content-between p-2 rounded-3 theme-bg-secondary border border-secondary mb-3">
-                  <div className="d-flex align-items-center gap-2 text-truncate">
-                    <span className="text-warning">📝</span>
-                    <span className="theme-text-primary small text-truncate" style={{ fontSize: '12px' }}>
-                      {connection?.activeFilePath || 'index.js'}
-                    </span>
-                  </div>
-                  <Badge bg="warning" text="dark" style={{ fontSize: '9px' }}>Modified</Badge>
+                <div className="d-flex flex-column gap-2 mb-3" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                  {gitStatus.changes.map((change, idx) => (
+                    <div key={idx} className="d-flex align-items-center justify-content-between p-2 rounded-3 theme-bg-secondary border border-secondary">
+                      <div className="d-flex align-items-center gap-2 text-truncate">
+                        <span className="small">
+                          {change.status === '??' ? '🆕' : change.status === 'D' ? '🗑️' : '📝'}
+                        </span>
+                        <span className="theme-text-primary small text-truncate" style={{ fontSize: '12px' }} title={change.path}>
+                          {change.path}
+                        </span>
+                      </div>
+                      <Badge 
+                        bg={change.status === '??' ? 'success' : change.status === 'D' ? 'danger' : 'warning'} 
+                        text={change.status === '??' || change.status === 'D' ? 'white' : 'dark'} 
+                        style={{ fontSize: '9px' }}
+                      >
+                        {change.statusText}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -1247,7 +1260,7 @@ export default function GitPanel({ editorRef, roomId }) {
                   onChange={(e) => setCommitMessage(e.target.value)}
                   className="small"
                   style={{ fontSize: '12px' }}
-                  disabled={!hasChanges || isCommitting || isGitLocked}
+                  disabled={!anyWorkspaceChanges || isCommitting || isGitLocked}
                 />
               </Form.Group>
               <Button
@@ -1255,7 +1268,7 @@ export default function GitPanel({ editorRef, roomId }) {
                 className="w-100 py-2 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2 border-0"
                 style={{ background: 'var(--primary-gradient)', fontSize: '12px' }}
                 onClick={handleGitCommit}
-                disabled={!hasChanges || isCommitting || !commitMessage.trim() || isGitLocked}
+                disabled={!anyWorkspaceChanges || isCommitting || !commitMessage.trim() || isGitLocked}
               >
                 {isCommitting ? (
                   <><Spinner animation="border" size="sm" style={{ width: '12px', height: '12px' }} /> Committing...</>
@@ -1468,19 +1481,31 @@ export default function GitPanel({ editorRef, roomId }) {
             <span>CHANGES</span>
             {connection?.autoSyncEnabled && <Badge bg="success" style={{ fontSize: '8px' }}>Auto-Sync ON</Badge>}
           </div>
-          {!hasChanges ? (
+          {(!gitStatus?.changes || gitStatus.changes.length === 0) ? (
             <div className="p-3 text-center rounded-3 theme-bg-secondary text-muted small" style={{ border: '1px dashed var(--border-subtle)' }}>
               No file modifications detected.
             </div>
           ) : (
-            <div className="d-flex align-items-center justify-content-between p-2 rounded-3 theme-bg-secondary border border-secondary">
-              <div className="d-flex align-items-center gap-2 text-truncate">
-                <span className="text-warning">📝</span>
-                <span className="theme-text-primary small text-truncate" style={{ fontSize: '12px' }}>
-                  {connection?.activeFilePath || 'index.js'}
-                </span>
-              </div>
-              <Badge bg="warning" text="dark" style={{ fontSize: '9px' }}>Modified</Badge>
+            <div className="d-flex flex-column gap-2" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+              {gitStatus.changes.map((change, idx) => (
+                <div key={idx} className="d-flex align-items-center justify-content-between p-2 rounded-3 theme-bg-secondary border border-secondary">
+                  <div className="d-flex align-items-center gap-2 text-truncate">
+                    <span className="small">
+                      {change.status === '??' ? '🆕' : change.status === 'D' ? '🗑️' : '📝'}
+                    </span>
+                    <span className="theme-text-primary small text-truncate" style={{ fontSize: '12px' }} title={change.path}>
+                      {change.path}
+                    </span>
+                  </div>
+                  <Badge 
+                    bg={change.status === '??' ? 'success' : change.status === 'D' ? 'danger' : 'warning'} 
+                    text={change.status === '??' || change.status === 'D' ? 'white' : 'dark'} 
+                    style={{ fontSize: '9px' }}
+                  >
+                    {change.statusText}
+                  </Badge>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -1498,7 +1523,7 @@ export default function GitPanel({ editorRef, roomId }) {
               onChange={(e) => setCommitMessage(e.target.value)}
               className="small"
               style={{ fontSize: '12px' }}
-              disabled={!hasChanges || isCommitting || isGitLocked}
+              disabled={!anyWorkspaceChanges || isCommitting || isGitLocked}
             />
           </Form.Group>
           <Button
@@ -1506,7 +1531,7 @@ export default function GitPanel({ editorRef, roomId }) {
             className="w-100 py-2 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2 border-0"
             style={{ background: 'var(--primary-gradient)', fontSize: '12px' }}
             onClick={handleGitCommit}
-            disabled={!hasChanges || isCommitting || !commitMessage.trim() || isGitLocked}
+            disabled={!anyWorkspaceChanges || isCommitting || !commitMessage.trim() || isGitLocked}
           >
             {isCommitting ? (
               <><Spinner animation="border" size="sm" style={{ width: '12px', height: '12px' }} /> Committing...</>

@@ -712,12 +712,14 @@ const commitHandler = async (req, res) => {
       return res.status(400).json({ error: 'Local Git repository is not initialized' });
     }
 
-    const fullPath = pathModule.join(roomPath, filePath);
-    const fileDir = pathModule.dirname(fullPath);
-    if (!fs.existsSync(fileDir)) {
-      fs.mkdirSync(fileDir, { recursive: true });
+    if (filePath && content !== undefined && content !== null) {
+      const fullPath = pathModule.join(roomPath, filePath);
+      const fileDir = pathModule.dirname(fullPath);
+      if (!fs.existsSync(fileDir)) {
+        fs.mkdirSync(fileDir, { recursive: true });
+      }
+      fs.writeFileSync(fullPath, content, 'utf8');
     }
-    fs.writeFileSync(fullPath, content, 'utf8');
 
     await runGit(['add', '.'], roomPath);
     const output = await runGit(['commit', '-m', commitMessage || 'Updates from Workspace'], roomPath);
@@ -830,13 +832,33 @@ app.get('/api/github/status', async (req, res) => {
       }
     }
 
+    let changes = [];
+    if (gitDirExists) {
+      try {
+        const stdout = await runGit(['status', '--porcelain'], roomPath);
+        changes = stdout.split('\n').filter(Boolean).map(line => {
+          const status = line.substring(0, 2).trim();
+          const filePath = line.substring(3).replace(/^"|"$/g, '').trim();
+          let statusText = 'Modified';
+          if (status === '??') statusText = 'Untracked';
+          else if (status === 'A') statusText = 'Added';
+          else if (status === 'D') statusText = 'Deleted';
+          else if (status === 'R') statusText = 'Renamed';
+          return { path: filePath, status, statusText };
+        });
+      } catch (e) {
+        console.error("Git status porcelain check failed:", e.message);
+      }
+    }
+
     res.json({
       initialized: true,
       remoteUrl,
       currentBranch,
       hasRemote: !!remoteUrl,
       repoOwner,
-      repoName
+      repoName,
+      changes
     });
   } catch (err) {
     console.error("Git status check failed:", err);
