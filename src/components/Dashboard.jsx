@@ -65,6 +65,7 @@ export default function Dashboard() {
   // Multi-file state
   const [activeFile, setActiveFile] = useState(null); // { path, name, content, language }
   const [openTabs, setOpenTabs] = useState([]); // [{ path, name, language }]
+  const [previewPath, setPreviewPath] = useState('');
 
   // Reset active file and open tabs when room changes
   useEffect(() => {
@@ -475,15 +476,46 @@ export default function Dashboard() {
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#f59e0b' }}></span>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
                     </div>
-                    <div className="flex-grow-1 text-center bg-dark text-muted py-0.5 rounded px-2" style={{ border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'monospace', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {PREVIEW_BASE_URL}/?room={roomId}
+                    <div className="d-flex align-items-center flex-grow-1 bg-dark rounded px-2" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <span className="text-muted me-1" style={{ fontFamily: 'monospace', fontSize: '9px', userSelect: 'none' }}>
+                        {PREVIEW_BASE_URL}/
+                      </span>
+                      <input
+                        type="text"
+                        value={previewPath}
+                        onChange={(e) => setPreviewPath(e.target.value)}
+                        placeholder="index.html"
+                        className="bg-transparent border-0 text-white flex-grow-1 py-0.5"
+                        style={{ fontFamily: 'monospace', fontSize: '9px', outline: 'none', minWidth: '80px' }}
+                      />
+                      <span className="text-muted ms-1" style={{ fontFamily: 'monospace', fontSize: '9px', userSelect: 'none' }}>
+                        ?room={roomId}
+                      </span>
                     </div>
+                    
+                    {activeFile && (activeFile.name.endsWith('.html') || activeFile.name.endsWith('.js') || activeFile.name.endsWith('.jsx')) && (
+                      <button
+                        onClick={() => setPreviewPath(activeFile.path)}
+                        className="btn btn-xs py-0.5 px-2 text-white border-secondary hover-bg-secondary"
+                        style={{ fontSize: '9px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      >
+                        Use Active File
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={handleRefreshIframe}
+                      className="btn btn-xs py-0.5 px-1.5 text-white"
+                      style={{ fontSize: '9px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      Refresh
+                    </button>
                   </div>
                   
                   {/* Preview iframe */}
                   <iframe
                     ref={iframeRef}
-                    src={`${PREVIEW_BASE_URL}/?room=${roomId}`}
+                    src={`${PREVIEW_BASE_URL}/${previewPath || ''}?room=${roomId}`}
                     title="Live App Preview"
                     className="w-100 flex-grow-1 border-0"
                     style={{ backgroundColor: '#ffffff' }}
