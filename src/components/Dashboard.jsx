@@ -492,24 +492,15 @@ export default function Dashboard() {
                         ?room={roomId}
                       </span>
                     </div>
-                    
                     {activeFile && (activeFile.name.endsWith('.html') || activeFile.name.endsWith('.js') || activeFile.name.endsWith('.jsx')) && (
                       <button
                         onClick={() => setPreviewPath(activeFile.path)}
                         className="btn btn-xs py-0.5 px-2 text-white border-secondary hover-bg-secondary"
                         style={{ fontSize: '9px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
                       >
-                        Use Active File
+                        Go Live
                       </button>
                     )}
-                    
-                    <button
-                      onClick={handleRefreshIframe}
-                      className="btn btn-xs py-0.5 px-1.5 text-white"
-                      style={{ fontSize: '9px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                    >
-                      Refresh
-                    </button>
                   </div>
                   
                   {/* Preview iframe */}
