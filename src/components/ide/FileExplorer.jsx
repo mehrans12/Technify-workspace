@@ -246,10 +246,13 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
       const response = await fetch(`${API_BASE}/api/workspace/files?roomId=${roomId}`);
       if (!response.ok) throw new Error('Failed to load files');
       let data;
+      const responseClone = response.clone();
       try {
         data = await response.json();
       } catch (jsonErr) {
-        throw new Error(`Server returned invalid response (Error ${response.status})`);
+        const text = await responseClone.text().catch(() => '');
+        const snippet = text ? text.substring(0, 100).replace(/\s+/g, ' ') : 'empty response';
+        throw new Error(`Server returned invalid response (Error ${response.status}). Preview: "${snippet}"`);
       }
       setFiles(data.files || []);
     } catch (err) {
@@ -291,10 +294,13 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
       const response = await fetch(`${API_BASE}/api/workspace/file?roomId=${roomId}&path=${encodeURIComponent(filePath)}`);
       if (!response.ok) throw new Error('Failed to read file');
       let data;
+      const responseClone = response.clone();
       try {
         data = await response.json();
       } catch (jsonErr) {
-        throw new Error(`Server returned invalid response (Error ${response.status})`);
+        const text = await responseClone.text().catch(() => '');
+        const snippet = text ? text.substring(0, 100).replace(/\s+/g, ' ') : 'empty response';
+        throw new Error(`Server returned invalid response (Error ${response.status}). Preview: "${snippet}"`);
       }
 
       const ext = fileName.split('.').pop()?.toLowerCase() || '';
@@ -328,11 +334,14 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
 
       if (!response.ok) {
         let errMsg = 'Failed to create file';
+        const responseClone = response.clone();
         try {
           const data = await response.json();
           errMsg = data.error || errMsg;
         } catch (e) {
-          errMsg = `Error ${response.status}: ${response.statusText || 'Unexpected response structure'}`;
+          const text = await responseClone.text().catch(() => '');
+          const snippet = text ? text.substring(0, 100).replace(/\s+/g, ' ') : 'empty response';
+          errMsg = `Error ${response.status}: ${response.statusText || 'Unexpected response structure'}. Preview: "${snippet}"`;
         }
         throw new Error(errMsg);
       }
@@ -368,11 +377,14 @@ export default function FileExplorer({ roomId, onFileSelect, activeFile, isReadO
 
       if (!response.ok) {
         let errMsg = 'Failed to create folder';
+        const responseClone = response.clone();
         try {
           const data = await response.json();
           errMsg = data.error || errMsg;
         } catch (e) {
-          errMsg = `Error ${response.status}: ${response.statusText || 'Unexpected response structure'}`;
+          const text = await responseClone.text().catch(() => '');
+          const snippet = text ? text.substring(0, 100).replace(/\s+/g, ' ') : 'empty response';
+          errMsg = `Error ${response.status}: ${response.statusText || 'Unexpected response structure'}. Preview: "${snippet}"`;
         }
         throw new Error(errMsg);
       }
