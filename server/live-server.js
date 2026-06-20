@@ -231,7 +231,8 @@ function getLiveClientScript(roomId) {
 <script>
   (function() {
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const socketUrl = protocol + window.location.host + '/?room=${roomId}';
+    const pathPrefix = window.location.pathname.startsWith('/preview') ? '/preview-ws' : '';
+    const socketUrl = protocol + window.location.host + pathPrefix + '/?room=${roomId}';
     let ws;
     let wasDisconnected = false;
     function connect() {
@@ -362,8 +363,11 @@ async function compileRoomIfNeeded(roomId) {
   compiledCache[roomId] = { js: jsContent, css: cssContent };
 }
 
+// Create Preview Router
+const previewRouter = express.Router();
+
 // Middleware: Route requests to VFS
-app.get('*', async (req, res, next) => {
+previewRouter.get('*', async (req, res, next) => {
   const roomId = getRoomIdFromRequest(req);
   loadRoomVfs(roomId);
 
@@ -416,18 +420,18 @@ app.get('*', async (req, res, next) => {
       if (projectType === 'react' || projectType === 'typescript') {
         await compileRoomIfNeeded(roomId);
         
-        // Rewrite index.html script tags to point to compiled bundle
+        // Rewrite index.html script tags to point to compiled bundle (using relative paths!)
         const scriptMatch = htmlContent.match(/<script\s+[^>]*src=["']([^"']+)["'][^>]*>/i);
         if (scriptMatch) {
-          finalHtml = finalHtml.replace(scriptMatch[0], `<script type="module" src="/dist/bundle.js"></script>`);
+          finalHtml = finalHtml.replace(scriptMatch[0], `<script type="module" src="dist/bundle.js"></script>`);
         }
 
-        // Inject link to compile CSS bundle if generated
+        // Inject link to compile CSS bundle if generated (using relative paths!)
         if (compiledCache[roomId] && compiledCache[roomId].css) {
           if (finalHtml.includes('</head>')) {
-            finalHtml = finalHtml.replace('</head>', `<link rel="stylesheet" href="/dist/bundle.css"></head>`);
+            finalHtml = finalHtml.replace('</head>', `<link rel="stylesheet" href="dist/bundle.css"></head>`);
           } else {
-            finalHtml = `<link rel="stylesheet" href="/dist/bundle.css">` + finalHtml;
+            finalHtml = `<link rel="stylesheet" href="dist/bundle.css">` + finalHtml;
           }
         }
       }
@@ -468,22 +472,23 @@ app.get('*', async (req, res, next) => {
 });
 
 // Fallback static serve for assets physically stored in room folders (if any)
-app.use((req, res, next) => {
+previewRouter.use((req, res, next) => {
   const roomId = getRoomIdFromRequest(req);
   const workspacePath = getRoomWorkspacePath(roomId);
   express.static(workspacePath)(req, res, next);
 });
 
-const server = http.createServer(app);
+// Standalone vs Integrated Mode Setup
+let isStandalone = true;
 
-// Create WebSocket server
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ noServer: true });
+const liveWss = new WebSocketServer({ noServer: true });
 const clients = new Set();
 
-wss.on('connection', (ws, req) => {
+function handleLiveConnection(ws, req) {
   let roomId = 'global';
   try {
-    const reqUrl = new URL(req.url, 'http://localhost:3000');
+    const reqUrl = new URL(req.url, 'http://localhost');
     roomId = reqUrl.searchParams.get('room') || 'global';
   } catch (e) {}
 
@@ -500,7 +505,11 @@ wss.on('connection', (ws, req) => {
     console.error(`[Live Server] WebSocket client error on room ${roomId}:`, err);
     clients.delete(ws);
   });
-});
+}
+
+// Bind connection handlers
+wss.on('connection', handleLiveConnection);
+liveWss.on('connection', handleLiveConnection);
 
 // Watch workspacesDir with chokidar for modifications
 console.log(`[Live Server] Watching workspaces folder: ${workspacesDir}`);
@@ -561,6 +570,40 @@ watcher.on('all', (event, filePath) => {
   broadcastUpdate(roomId, fileRelPath);
 });
 
-server.listen(PORT, () => {
-  console.log(`[Live Server] Hybrid IDE Compiler Dev Runtime listening on http://localhost:${PORT}`);
-});
+// Exported initialization for Integrated Mode
+export function initLivePreview(mainServer, mainApp) {
+  isStandalone = false;
+  console.log('[Live Server] Initializing Integrated Mode inside collab-server...');
+  
+  // Register routes under /preview subpath
+  mainApp.use('/preview', previewRouter);
+}
+
+// Export upgrade handler for integrated WebSocket connections
+export function handlePreviewUpgrade(request, socket, head) {
+  liveWss.handleUpgrade(request, socket, head, (ws) => {
+    liveWss.emit('connection', ws, request);
+  });
+}
+
+// Give it a tiny delay to start Standalone mode if not initialized in Integrated mode
+setTimeout(() => {
+  if (isStandalone) {
+    console.log('[Live Server] Starting Standalone Mode...');
+    app.use('/preview', previewRouter);
+    app.use('/', previewRouter);
+    
+    const standaloneServer = http.createServer(app);
+    
+    // Handle standalone upgrades for wss
+    standaloneServer.on('upgrade', (request, socket, head) => {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    });
+
+    standaloneServer.listen(PORT, () => {
+      console.log(`[Live Server] Standalone Compiler Dev Runtime listening on http://localhost:${PORT}`);
+    });
+  }
+}, 300);

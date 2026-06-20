@@ -1198,6 +1198,10 @@ Format your code blocks with language identifiers.`;
 
 const server = http.createServer(app);
 
+// Import live preview integrated server
+import { initLivePreview, handlePreviewUpgrade } from './live-server.js';
+initLivePreview(server, app);
+
 // --- y-websocket for Yjs CRDT sync ---
 const wss = new WebSocketServer({ noServer: true });
 
@@ -1208,6 +1212,12 @@ server.on('upgrade', async (request, socket, head) => {
 
   // Socket.IO handles its own upgrades — skip those
   if (pathname.startsWith('/socket.io')) {
+    return;
+  }
+
+  // Live preview WS HMR updates - upgrade connection directly
+  if (pathname.startsWith('/preview-ws')) {
+    handlePreviewUpgrade(request, socket, head);
     return;
   }
 
