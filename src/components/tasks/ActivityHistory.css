@@ -1,0 +1,130 @@
+.activity-history {
+  padding: 0;
+}
+
+.timeline {
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.timeline-marker {
+  flex-shrink: 0;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+.icon-badge.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.icon-badge.bg-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+}
+
+.icon-badge.bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.icon-badge.bg-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.icon-badge.bg-primary {
+  background: var(--primary-gradient);
+}
+
+.icon-badge.bg-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.timeline-line {
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  width: 2px;
+  height: 24px;
+  background: var(--border-subtle);
+  z-index: 0;
+}
+
+.timeline-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.activity-header h6 {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.activity-details {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.activity-comment {
+  border-left: 3px solid var(--accent);
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+/* Badge styling */
+.badge {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .timeline-item {
+    gap: 12px;
+  }
+
+  .timeline-marker {
+    width: 36px;
+    height: 36px;
+  }
+
+  .icon-badge {
+    width: 36px;
+    height: 36px;
+  }
+
+  .timeline-line {
+    left: 17px;
+  }
+
+  .activity-header h6 {
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,244 @@
+.task-analytics {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: calc(100vh - 112px);
+}
+
+.analytics-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.analytics-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.analytics-subtitle {
+  font-size: 1rem;
+  color: #718096;
+  margin: 0;
+}
+
+/* Metric Cards */
+.metric-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  background: white;
+  border-top: 4px solid #667eea;
+  overflow: hidden;
+}
+
+.metric-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.metric-card.metric-success {
+  border-top-color: #28a745;
+}
+
+.metric-card.metric-info {
+  border-top-color: #17a2b8;
+}
+
+.metric-card.metric-warning {
+  border-top-color: #ffc107;
+}
+
+.metric-card.metric-danger {
+  border-top-color: #dc3545;
+}
+
+.metric-card .card-body {
+  padding: 24px;
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  color: #718096;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px 0;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+  line-height: 1;
+}
+
+.metric-icon {
+  color: #667eea;
+  opacity: 0.2;
+}
+
+.metric-success .metric-icon {
+  color: #28a745;
+}
+
+.metric-info .metric-icon {
+  color: #17a2b8;
+}
+
+.metric-warning .metric-icon {
+  color: #ffc107;
+}
+
+/* Chart Cards */
+.chart-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  background: white;
+  overflow: hidden;
+}
+
+.chart-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.chart-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border: none;
+}
+
+.chart-header .card-title {
+  color: white;
+  font-weight: 600;
+  margin: 0;
+}
+
+.chart-card .card-body {
+  padding: 24px;
+}
+
+/* Productivity Table */
+.productivity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.productivity-table thead th {
+  background: #f8f9fa;
+  color: #2d3748;
+  font-weight: 600;
+  padding: 16px;
+  text-align: left;
+  border-bottom: 2px solid #e9ecef;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.productivity-table tbody td {
+  padding: 16px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.productivity-row:hover {
+  background: #f8f9fa;
+}
+
+.member-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.productivity-bar {
+  min-width: 150px;
+}
+
+.productivity-progress .progress-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Badge Styles */
+.badge {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+/* Progress Bar */
+.progress {
+  height: 6px;
+  border-radius: 4px;
+  background: #e9ecef;
+}
+
+.progress-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .analytics-title {
+    font-size: 1.5rem;
+  }
+
+  .analytics-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .metric-card .card-body {
+    padding: 16px;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+  }
+
+  .productivity-table {
+    font-size: 0.85rem;
+  }
+
+  .productivity-table thead th,
+  .productivity-table tbody td {
+    padding: 12px;
+  }
+
+  .productivity-bar {
+    min-width: 100px;
+  }
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.metric-card,
+.chart-card {
+  animation: slideUp 0.5s ease-out;
+}

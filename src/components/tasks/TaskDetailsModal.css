@@ -1,0 +1,112 @@
+.task-details-modal {
+  backdrop-filter: blur(4px);
+}
+
+.task-modal-header {
+  background: var(--bg-header);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.task-modal-header .btn-close {
+  filter: invert(1);
+}
+
+.task-modal-body {
+  background: var(--surface-primary);
+  max-height: 70vh;
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+
+.task-tabs .nav-tabs {
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 0;
+}
+
+.task-tabs .nav-link {
+  color: var(--text-secondary);
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.task-tabs .nav-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.task-tabs .nav-link.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: transparent;
+}
+
+.task-form {
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: none;
+}
+
+.task-form .form-label {
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.task-form .form-control,
+.task-form .form-select {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-subtle) !important;
+  transition: all 0.2s ease;
+}
+
+.task-form .form-control:focus,
+.task-form .form-select:focus {
+  border-color: var(--border-focused) !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 210, 255, 0.25) !important;
+}
+
+.assigned-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.linked-files {
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: none;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  opacity: 0.7;
+}
+
+/* Scrollbar styling */
+.task-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.task-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.task-modal-body::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+.task-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

@@ -1,0 +1,149 @@
+.comments-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 500px;
+}
+
+.comments-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.comment-item {
+  background: var(--bg-card);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+
+.comment-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.comment-time {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.comment-item:hover .comment-actions {
+  opacity: 1;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-icon:hover {
+  color: var(--accent-secondary);
+  transform: scale(1.1);
+}
+
+.btn-icon.text-danger {
+  color: #dc3545;
+}
+
+.btn-icon.text-danger:hover {
+  color: #c82333;
+}
+
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.comment-content {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-wrap: break-word;
+}
+
+.comment-edit {
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.comment-form {
+  background: var(--surface-primary);
+  padding: 12px;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0 0 8px 8px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.comment-input {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-subtle) !important;
+  border-radius: 6px !important;
+  font-size: 0.9rem;
+  resize: none;
+  transition: all 0.2s ease;
+}
+
+.comment-input:focus {
+  border-color: var(--border-focused) !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 210, 255, 0.25) !important;
+}
+
+/* Scrollbar */
+.comments-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
