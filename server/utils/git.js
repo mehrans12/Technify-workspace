@@ -1,3 +1,4 @@
+/* global process */
 import pathModule from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -12,7 +13,7 @@ if (!fs.existsSync(WORKSPACE_BASE)) {
 }
 
 export function getRoomWorkspacePath(roomId) {
-  let safeRoomId = (roomId || 'global').replace(/[^a-zA-Z0-9_\-]/g, '');
+  let safeRoomId = (roomId || 'global').replace(/[^a-zA-Z0-9_-]/g, '');
   if (!safeRoomId) {
     safeRoomId = 'global';
   }
@@ -20,13 +21,39 @@ export function getRoomWorkspacePath(roomId) {
 }
 
 /**
+ * Resolve git executable path dynamically on Windows
+ */
+export function getGitCommand() {
+  if (process.env.GIT_PATH && fs.existsSync(process.env.GIT_PATH)) {
+    return process.env.GIT_PATH;
+  }
+  
+  if (process.platform === 'win32') {
+    const commonPaths = [
+      'C:\\Program Files\\Git\\cmd\\git.exe',
+      'C:\\Program Files\\Git\\bin\\git.exe',
+      'C:\\Program Files (x86)\\Git\\cmd\\git.exe',
+      'C:\\Program Files (x86)\\Git\\bin\\git.exe'
+    ];
+    for (const p of commonPaths) {
+      if (fs.existsSync(p)) {
+        return p;
+      }
+    }
+  }
+  
+  return 'git';
+}
+
+/**
  * Execute git commands safely via child_process.spawn
  */
 export function runGit(args, cwd) {
   return new Promise((resolve, reject) => {
-    console.log(`[Git Exec] git ${args.join(' ')} in ${cwd}`);
+    const gitCmd = getGitCommand();
+    console.log(`[Git Exec] ${gitCmd} ${args.join(' ')} in ${cwd}`);
     try {
-      const gitProcess = spawn('git', args, { cwd });
+      const gitProcess = spawn(gitCmd, args, { cwd });
       let stdout = '';
       let stderr = '';
 
