@@ -779,11 +779,6 @@ export default function GitPanel({ editorRef, roomId }) {
     const branch = gitStatus?.currentBranch || connection?.branchName || 'main';
     const repo = gitStatus?.repoName || connection?.repoName || 'workspace';
 
-    if (branch === 'main' || branch === 'master') {
-      alert(`Protected Branch: Direct push to '${branch}' is not allowed. Please commit to a feature branch and create a Pull Request instead.`);
-      return;
-    }
-
     const hasLock = await acquireLock('push');
     if (!hasLock) return;
 

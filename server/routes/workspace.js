@@ -11,6 +11,7 @@ import fs from 'fs';
 import pathModule from 'path';
 import { getRoomWorkspacePath } from '../utils/git.js';
 import { executeLocalCode } from '../utils/executor.js';
+import { clearRoomVfs } from '../live-server.js';
 
 const router = Router();
 
@@ -101,6 +102,7 @@ router.post('/file', (req, res) => {
     }
 
     fs.writeFileSync(fullPath, content || '', 'utf8');
+    clearRoomVfs(roomId);
     res.json({ success: true, path: filePath });
   } catch (err) {
     console.error('[Workspace] Error writing file:', err);
@@ -136,6 +138,7 @@ router.post('/create-file', (req, res) => {
     }
 
     fs.writeFileSync(fullPath, content || '', 'utf8');
+    clearRoomVfs(roomId);
     res.json({ success: true, path: filePath });
   } catch (err) {
     console.error('[Workspace] Error creating file:', err);
@@ -164,6 +167,7 @@ router.post('/create-folder', (req, res) => {
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
     }
+    clearRoomVfs(roomId);
     res.json({ success: true, path: folderPath });
   } catch (err) {
     console.error('[Workspace] Error creating folder:', err);
@@ -199,6 +203,7 @@ router.post('/rename', (req, res) => {
       fs.mkdirSync(newDir, { recursive: true });
     }
     fs.renameSync(fullOldPath, fullNewPath);
+    clearRoomVfs(roomId);
     res.json({ success: true, oldPath, newPath });
   } catch (err) {
     console.error('[Workspace] Error renaming:', err);
@@ -234,6 +239,7 @@ router.post('/delete', (req, res) => {
     } else {
       fs.unlinkSync(fullPath);
     }
+    clearRoomVfs(roomId);
     res.json({ success: true, path: targetPath });
   } catch (err) {
     console.error('[Workspace] Error deleting:', err);

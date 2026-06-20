@@ -591,6 +591,9 @@ app.post('/api/github/branches/switch', async (req, res) => {
 
     try { await runGit(['stash', 'pop'], roomPath); } catch(e) {}
 
+    // Clear live preview VFS cache for this room since files changed
+    clearRoomVfs(roomId);
+
     let content = '';
     if (activeFilePath) {
       const fullPath = pathModule.join(roomPath, activeFilePath);
@@ -767,6 +770,9 @@ app.post('/api/github/pull', async (req, res) => {
 
     const output = await runGit(['pull', 'origin', branch || 'main'], roomPath);
 
+    // Clear live preview VFS cache for this room since files changed
+    clearRoomVfs(roomId);
+
     let content = '';
     if (activeFilePath) {
       const fullPath = pathModule.join(roomPath, activeFilePath);
@@ -892,12 +898,19 @@ app.post('/api/github/clone', async (req, res) => {
     const roomPath = getRoomWorkspacePath(roomId);
 
     if (fs.existsSync(roomPath)) {
-      fs.rmSync(roomPath, { recursive: true, force: true });
+      const entries = fs.readdirSync(roomPath);
+      for (const entry of entries) {
+        fs.rmSync(pathModule.join(roomPath, entry), { recursive: true, force: true });
+      }
+    } else {
+      fs.mkdirSync(roomPath, { recursive: true });
     }
-    fs.mkdirSync(roomPath, { recursive: true });
 
     const cloneUrl = `https://${token}@github.com/${owner}/${repo}.git`;
     await runGit(['clone', '-b', branch || 'main', cloneUrl, '.'], roomPath);
+
+    // Clear live preview VFS cache for this room since files changed
+    clearRoomVfs(roomId);
 
     const files = fs.readdirSync(roomPath);
     const defaultFile = files.find(f => f.toLowerCase() === 'readme.md') || files.find(f => f.endsWith('.js') || f.endsWith('.py')) || files[0] || 'README.md';
@@ -1226,7 +1239,7 @@ Format your code blocks with language identifiers.`;
 const server = http.createServer(app);
 
 // Import live preview integrated server
-import { initLivePreview, handlePreviewUpgrade } from './live-server.js';
+import { initLivePreview, handlePreviewUpgrade, clearRoomVfs } from './live-server.js';
 initLivePreview(server, app);
 
 // --- y-websocket for Yjs CRDT sync ---

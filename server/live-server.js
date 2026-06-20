@@ -113,10 +113,11 @@ function detectProjectType(roomId) {
   const roomVfs = vfs[roomId] || {};
   const filePaths = Object.keys(roomVfs);
   
-  // 1. package.json + react
-  if (roomVfs['package.json']) {
+  // 1. package.json + react (check all package.json files in subdirectories too)
+  const pkgKeys = filePaths.filter(p => p === 'package.json' || p.endsWith('/package.json'));
+  for (const pkgKey of pkgKeys) {
     try {
-      const pkg = JSON.parse(roomVfs['package.json']);
+      const pkg = JSON.parse(roomVfs[pkgKey]);
       if ((pkg.dependencies && (pkg.dependencies.react || pkg.dependencies['react-dom'])) ||
           (pkg.devDependencies && (pkg.devDependencies.react || pkg.devDependencies['react-dom']))) {
         return 'react';
@@ -314,7 +315,7 @@ function getCompileErrorHtml(roomId, errorMsg) {
 }
 
 // Main compiler pipeline logic
-async function compileRoomIfNeeded(roomId) {
+async function compileRoomIfNeeded(roomId, targetHtmlPath = 'index.html') {
   const roomVfs = vfs[roomId] || {};
   const projectType = detectProjectType(roomId);
   
@@ -322,23 +323,38 @@ async function compileRoomIfNeeded(roomId) {
     return; // Static mode, no compilation needed
   }
 
-  // Find index.html to parse script tags
-  const htmlContent = roomVfs['index.html'];
+  // Find target HTML file to parse script tags
+  const htmlContent = roomVfs[targetHtmlPath];
   if (!htmlContent) return;
 
   const scriptMatch = htmlContent.match(/<script\s+[^>]*src=["']([^"']+)["'][^>]*>/i);
   if (!scriptMatch) return;
 
   let entryPoint = scriptMatch[1];
+  
+  // Resolve entryPoint relative to targetHtmlPath
+  let resolvedEntryPoint = entryPoint;
   if (entryPoint.startsWith('/')) {
-    entryPoint = entryPoint.substring(1);
+    resolvedEntryPoint = entryPoint.substring(1);
+  } else {
+    // Relative path resolve (e.g. targetHtmlPath = 'client/index.html', entryPoint = './src/main.jsx')
+    const htmlDir = path.dirname(targetHtmlPath);
+    if (htmlDir !== '.') {
+      resolvedEntryPoint = path.posix.join(htmlDir, entryPoint);
+    }
   }
 
-  if (!roomVfs[entryPoint]) return;
+  // Normalize resolvedEntryPoint
+  resolvedEntryPoint = resolvedEntryPoint.replace(/\\/g, '/');
+  if (resolvedEntryPoint.startsWith('./')) {
+    resolvedEntryPoint = resolvedEntryPoint.substring(2);
+  }
+
+  if (!roomVfs[resolvedEntryPoint]) return;
 
   // Run esbuild in-memory bundling
   const result = await esbuild.build({
-    entryPoints: [entryPoint],
+    entryPoints: [resolvedEntryPoint],
     bundle: true,
     write: false,
     outfile: 'bundle.js', // Needed for CSS routing paths calculation
@@ -360,7 +376,10 @@ async function compileRoomIfNeeded(roomId) {
     }
   }
 
-  compiledCache[roomId] = { js: jsContent, css: cssContent };
+  if (!compiledCache[roomId]) {
+    compiledCache[roomId] = {};
+  }
+  compiledCache[roomId][targetHtmlPath] = { js: jsContent, css: cssContent };
 }
 
 // Create Preview Router
@@ -378,17 +397,30 @@ previewRouter.get('*', async (req, res, next) => {
     reqPath = '/index.html';
   }
   
-  const vfsKey = reqPath.substring(1); // remove leading slash
+  let vfsKey = reqPath.substring(1); // remove leading slash
+
+  if (vfsKey === 'index.html' && !roomVfs[vfsKey]) {
+    // Look for any index.html in subdirectories
+    const allPaths = Object.keys(roomVfs);
+    const subIndex = allPaths.find(p => p.endsWith('/index.html'));
+    if (subIndex) {
+      console.log(`[Live Server] Root index.html not found, but found sub-index: ${subIndex}. Redirecting...`);
+      return res.redirect(`${req.baseUrl || '/preview'}/${subIndex}?room=${roomId}`);
+    }
+  }
 
   // 1. Compiled outputs serving
-  if (reqPath === '/dist/bundle.js') {
+  if (reqPath.endsWith('/dist/bundle.js')) {
+    const htmlDir = reqPath.substring(0, reqPath.length - '/dist/bundle.js'.length);
+    const targetHtmlPath = path.posix.join(htmlDir.substring(1), 'index.html'); // remove leading slash
+    
     try {
-      if (!compiledCache[roomId] || !compiledCache[roomId].js) {
-        await compileRoomIfNeeded(roomId);
+      if (!compiledCache[roomId] || !compiledCache[roomId][targetHtmlPath] || !compiledCache[roomId][targetHtmlPath].js) {
+        await compileRoomIfNeeded(roomId, targetHtmlPath);
       }
-      if (compiledCache[roomId] && compiledCache[roomId].js) {
+      if (compiledCache[roomId] && compiledCache[roomId][targetHtmlPath] && compiledCache[roomId][targetHtmlPath].js) {
         res.setHeader('Content-Type', 'application/javascript');
-        return res.send(compiledCache[roomId].js);
+        return res.send(compiledCache[roomId][targetHtmlPath].js);
       }
     } catch (err) {
       return res.setHeader('Content-Type', 'application/javascript').send(
@@ -398,10 +430,13 @@ previewRouter.get('*', async (req, res, next) => {
     return res.status(404).send('Bundle not found');
   }
 
-  if (reqPath === '/dist/bundle.css') {
-    if (compiledCache[roomId] && compiledCache[roomId].css) {
+  if (reqPath.endsWith('/dist/bundle.css')) {
+    const htmlDir = reqPath.substring(0, reqPath.length - '/dist/bundle.css'.length);
+    const targetHtmlPath = path.posix.join(htmlDir.substring(1), 'index.html'); // remove leading slash
+    
+    if (compiledCache[roomId] && compiledCache[roomId][targetHtmlPath] && compiledCache[roomId][targetHtmlPath].css) {
       res.setHeader('Content-Type', 'text/css');
-      return res.send(compiledCache[roomId].css);
+      return res.send(compiledCache[roomId][targetHtmlPath].css);
     }
     return res.status(404).send('Bundle CSS not found');
   }
@@ -418,7 +453,7 @@ previewRouter.get('*', async (req, res, next) => {
       let finalHtml = htmlContent;
 
       if (projectType === 'react' || projectType === 'typescript') {
-        await compileRoomIfNeeded(roomId);
+        await compileRoomIfNeeded(roomId, vfsKey);
         
         // Rewrite index.html script tags to point to compiled bundle (using relative paths!)
         const scriptMatch = htmlContent.match(/<script\s+[^>]*src=["']([^"']+)["'][^>]*>/i);
@@ -427,7 +462,7 @@ previewRouter.get('*', async (req, res, next) => {
         }
 
         // Inject link to compile CSS bundle if generated (using relative paths!)
-        if (compiledCache[roomId] && compiledCache[roomId].css) {
+        if (compiledCache[roomId] && compiledCache[roomId][vfsKey] && compiledCache[roomId][vfsKey].css) {
           if (finalHtml.includes('</head>')) {
             finalHtml = finalHtml.replace('</head>', `<link rel="stylesheet" href="dist/bundle.css"></head>`);
           } else {
@@ -585,6 +620,14 @@ export function handlePreviewUpgrade(request, socket, head) {
     liveWss.emit('connection', ws, request);
   });
 }
+
+// Clear room VFS cache and compiled cache to force reload on next request
+export function clearRoomVfs(roomId) {
+  console.log(`[Live Server] Clearing VFS cache for room: ${roomId}`);
+  delete vfs[roomId];
+  delete compiledCache[roomId];
+}
+
 
 // Give it a tiny delay to start Standalone mode if not initialized in Integrated mode
 setTimeout(() => {
