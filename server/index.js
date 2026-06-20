@@ -1,3 +1,4 @@
+/* global process */
 /**
  * Technify Collab Server — Main Entry Point
  * 
@@ -20,7 +21,7 @@ import pathModule from 'path';
 import { fileURLToPath } from 'url';
 import OpenAI from 'openai';
 import crypto from 'crypto';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import fs from 'fs';
 import { Server as SocketIOServer } from 'socket.io';
 
@@ -88,11 +89,37 @@ const openai = new OpenAI({
 });
 
 // ========================================
-// Health Check
+// Health Check & Diagnostics
 // ========================================
 
 app.get('/', (req, res) => {
   res.json({ status: 'ok', service: 'Technify Collab Server', version: '2.0.0' });
+});
+
+app.get('/api/git-diagnose', (req, res) => {
+  const diagnostics = {
+    platform: process.platform,
+    envPath: process.env.PATH,
+    gitInPath: false,
+    whichGit: null,
+    gitVersion: null,
+    spawnError: null,
+  };
+  
+  try {
+    diagnostics.whichGit = execSync('which git || whereis git').toString().trim();
+  } catch (e) {
+    diagnostics.whichGit = `Error: ${e.message}`;
+  }
+  
+  try {
+    diagnostics.gitVersion = execSync('git --version').toString().trim();
+    diagnostics.gitInPath = true;
+  } catch (e) {
+    diagnostics.spawnError = e.message;
+  }
+  
+  res.json(diagnostics);
 });
 
 // ========================================
